@@ -1,0 +1,28 @@
+﻿rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /contact_submissions/{id} {
+      allow create: if
+        request.resource.data.name is string &&
+        request.resource.data.name.size() >= 2 &&
+        request.resource.data.email is string &&
+        request.resource.data.email.matches('[^@]+@[^@]+\\.[^@]+') &&
+        request.resource.data.message is string &&
+        request.resource.data.message.size() >= 10;
+    }
+    match /faqs/{id} {
+      allow update: if
+        request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly(['helpful_count', 'not_helpful_count']);
+    }
+    match /projects/{id} {
+      allow update: if
+        request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly(['view_count']);
+    }
+  }
+}
